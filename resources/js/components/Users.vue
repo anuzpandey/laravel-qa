@@ -7,7 +7,7 @@
                         <h3 class="card-title">User Lists</h3>
 
                         <div class="card-tools">
-                            <button class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Add New <i
+                            <button class="btn btn-primary" @click="newModal">Add New <i
                                     class="fa fa-user-plus fa-fw"></i></button>
                         </div>
                     </div>
@@ -33,7 +33,7 @@
                                     <td>{{user.created_at | properDate}}</td>
                                     <td><span class="tag tag-success">Approved</span></td>
                                     <td>
-                                        <a href=""> <i class="fa fa-edit green ml-2 mr-2"></i></a>
+                                        <a @click="editModal(user)"> <i class="fa fa-edit green ml-2 mr-2"></i></a>
                                         |
                                         <a @click="deleteUser(user.id)"> <i class="fa fa-trash red ml-2"></i></a>
                                     </td>
@@ -52,12 +52,13 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Add New User</h5>
+                        <h5 class="modal-title" id="exampleModalLabel" v-show="!editMode">Add New User</h5>
+                        <h5 class="modal-title" id="exampleModalLabel" v-show="editMode">Update User Info.</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form @submit.prevent="createUser">
+                    <form @submit.prevent="editMode ? updateUser() : createUser()">
                     <div class="modal-body">
                         <!-- Form Here -->
                         <div class="form-group">
@@ -98,7 +99,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Create</button>
+                        <button type="submit" v-show="!editMode" class="btn btn-primary">Create</button>
+                        <button type="submit" v-show="editMode" class="btn btn-success">Update</button>
                     </div>
                     </form>
                 </div>
@@ -112,8 +114,10 @@
     export default {
         data() {
             return {
+                editMode : true,
                 users : {},
                 form : new Form({
+                    id: '',
                     name: '',
                     email: '',
                     password: '',
@@ -124,6 +128,17 @@
             }
         },
         methods : {
+            newModal() {
+                this.editMode = false;
+                this.form.reset();
+                $('#exampleModal').modal('show');
+            },
+            editModal(user) {
+                this.editMode = true;
+                this.form.reset();
+                $('#exampleModal').modal('show');
+                this.form.fill(user);
+            },
             loadUser() {
                 axios.get('api/user').then(({data}) => (this.users = data.data));
             },
@@ -157,11 +172,10 @@
                     //if user clicks confirm button
                     this.form.delete('api/user/'+id)
                     .then(() => {
-                        swal.fire(
-                            'Deleted!',
-                            'Your data has been deleted.',
-                            'success'
-                        );
+                        toast.fire({
+                            icon: 'success',
+                            title: 'Updated Successfully!'
+                        });
                         Fire.$emit('AfterCreated');
                     })
                     .catch(() => {
@@ -173,6 +187,28 @@
                     });
                 }
                 })
+            },
+            updateUser() {
+                this.$Progress.start();
+                this.form.put('api/user/'+this.form.id)
+                .then(() => {
+                    $('#exampleModal').modal('hide');
+                    swal.fire(
+                        'Updated',
+                        'User Information has been Updated!',
+                        'success'
+                    );
+                    this.$Progress.finish();
+                    Fire.$emit('AfterCreated');
+                })
+                .catch(() => {
+                    swal.fire(
+                        'Failed',
+                        'There was something wrong.',
+                        'warning'
+                    );
+                    this.$Progress.fail();
+                });
             }
         },
         mounted() {
