@@ -128,6 +128,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <div class="content">
                 <div class="container-fluid">
                     <router-view></router-view>
+                    {{-- PVue-Progressbar --}}
+                    <vue-progress-bar></vue-progress-bar>
                 </div><!-- /.container-fluid -->
             </div>
             <!-- /.content -->

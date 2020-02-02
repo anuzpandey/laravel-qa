@@ -20,19 +20,22 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Type</th>
+                                    <th>Registered At</th>
                                     <th>Modify</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>183</td>
-                                    <td>John Doe</td>
-                                    <td>11-7-2014</td>
+                                <tr v-for="user in users" :key="user.id">
+                                    <td>{{user.id}}</td>
+                                    <td>{{user.name}}</td>
+                                    <td>{{user.email}}</td>
+                                    <td>{{user.type | capitalize}}</td>
+                                    <td>{{user.created_at | properDate}}</td>
                                     <td><span class="tag tag-success">Approved</span></td>
                                     <td>
                                         <a href=""> <i class="fa fa-edit green ml-2 mr-2"></i></a>
                                         |
-                                        <a href=""> <i class="fa fa-trash red ml-2"></i></a>
+                                        <a @click="deleteUser(user.id)"> <i class="fa fa-trash red ml-2"></i></a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -54,6 +57,7 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+                    <form @submit.prevent="createUser">
                     <div class="modal-body">
                         <!-- Form Here -->
                         <div class="form-group">
@@ -94,8 +98,9 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Create</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
                     </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -107,6 +112,7 @@
     export default {
         data() {
             return {
+                users : {},
                 form : new Form({
                     name: '',
                     email: '',
@@ -117,8 +123,63 @@
                 })
             }
         },
+        methods : {
+            loadUser() {
+                axios.get('api/user').then(({data}) => (this.users = data.data));
+            },
+            createUser() {
+                this.$Progress.start();
+                this.form.post('api/user')
+                .then(() => {
+                    $('#exampleModal').modal('hide');
+                    Fire.$emit('AfterCreated');
+                    toast.fire({
+                        icon: 'success',
+                        title: 'User created successfully'
+                    });
+                    this.$Progress.finish();
+                })
+                .catch(() => {
+                    this.$Progress.fail();
+                });
+            },
+            deleteUser(id) {
+                swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                if (result.value) {
+                    //if user clicks confirm button
+                    this.form.delete('api/user/'+id)
+                    .then(() => {
+                        swal.fire(
+                            'Deleted!',
+                            'Your data has been deleted.',
+                            'success'
+                        );
+                        Fire.$emit('AfterCreated');
+                    })
+                    .catch(() => {
+                        swal.fire(
+                            'Failed',
+                            'There was something wrong.',
+                            'warning'
+                        );
+                    });
+                }
+                })
+            }
+        },
         mounted() {
-            console.log('Component mounted.')
+            this.loadUser();
+            Fire.$on('AfterCreated', () => {
+                this.loadUser();
+            })
         }
     }
 </script>

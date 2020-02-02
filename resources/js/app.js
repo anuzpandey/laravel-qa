@@ -7,11 +7,27 @@
 require('./bootstrap');
 
 window.Vue = require('vue');
+
+// Import Plugins/Library
+import moment from 'moment';
+import VueProgressBar from 'vue-progressbar'
 import { Form, HasError, AlertError } from 'vform'
+import swal from 'sweetalert2'
 
 window.Form = Form;
 Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
+
+window.swal = swal;
+
+const toast = swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+window.toast = toast;
 
 import VueRouter from 'vue-router'
 Vue.use(VueRouter)
@@ -26,6 +42,27 @@ const router = new VueRouter({
     mode: 'history',
     routes // short for `routes: routes`
 })
+
+// Capitalize Filter
+Vue.filter('capitalize', function(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1)
+})
+
+// Date Format Filter
+Vue.filter('properDate', function(date) {
+    return moment(date).format('MMMM DD YYYY');
+})
+
+Vue.use(VueProgressBar, {
+    color : '#bffaf3',
+    failedColor: '#874b4b',
+    thickness: '5px'
+})
+
+// Custom Event Handler
+window.Fire = new Vue();
+
+
 
 /**
  * The following block of code may be used to automatically register your
