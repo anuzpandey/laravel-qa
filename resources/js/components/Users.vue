@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <div class="row mt-4">
+        <div class="row mt-4" v-if="$gate.isAdmin()">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
@@ -25,7 +25,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="user in users" :key="user.id">
+                                <tr v-for="user in users.data" :key="user.id">
                                     <td>{{user.id}}</td>
                                     <td>{{user.name}}</td>
                                     <td>{{user.email}}</td>
@@ -42,10 +42,19 @@
                         </table>
                     </div>
                     <!-- /.card-body -->
+                    <div class="card-footer">
+                        <pagination :data="users" @pagination-change-page="getResults"></pagination>
+                    </div>
                 </div>
                 <!-- /.card -->
             </div>
         </div>
+
+        <!-- Not Found -->
+        <div v-if="!$gate.isAdminOrAuthor()">
+            <not-found></not-found>
+        </div>
+
         <!-- Modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
             aria-hidden="true">
@@ -140,7 +149,9 @@
                 this.form.fill(user);
             },
             loadUser() {
-                axios.get('api/user').then(({data}) => (this.users = data.data));
+                if(this.$gate.isAdminOrAuthor()) {
+                    axios.get('api/user').then(({data}) => (this.users = data));
+                }
             },
             createUser() {
                 this.$Progress.start();
@@ -172,13 +183,17 @@
                     //if user clicks confirm button
                     this.form.delete('api/user/'+id)
                     .then(() => {
-                        toast.fire({
-                            icon: 'success',
-                            title: 'Updated Successfully!'
-                        });
+                        this.$Progress.start();
+                        swal.fire(
+                            'Deleted!',
+                            'Your data has been deleted.',
+                            'success'
+                        );
+                        this.$Progress.finish();
                         Fire.$emit('AfterCreated');
                     })
                     .catch(() => {
+                        this.$Progress.fail();
                         swal.fire(
                             'Failed',
                             'There was something wrong.',
@@ -193,11 +208,10 @@
                 this.form.put('api/user/'+this.form.id)
                 .then(() => {
                     $('#exampleModal').modal('hide');
-                    swal.fire(
-                        'Updated',
-                        'User Information has been Updated!',
-                        'success'
-                    );
+                    toast.fire({
+                        icon: 'success',
+                        title: 'Updated Successfully!'
+                    });
                     this.$Progress.finish();
                     Fire.$emit('AfterCreated');
                 })
@@ -209,6 +223,12 @@
                     );
                     this.$Progress.fail();
                 });
+            },
+            getResults(page = 1) {
+                axios.get('api/user?page=' + page)
+                .then(response => {
+                    this.users = response.data;
+                })
             }
         },
         mounted() {

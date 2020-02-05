@@ -80,15 +80,16 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
                         data-accordion="false">
                         <li class="nav-item">
-                            <router-link to="/dashboard" class="nav-link">
+                            <router-link tag="a" to="/dashboard" class="nav-link">
                               <i class="nav-icon fas fa-tachometer-alt"></i>
                                 <p>Dashboard</p>
                             </router-link>
                         </li>
-
+                        
+                        @can('isAdmin')
                         <li class="nav-item has-treeview">
                             <a href="#" class="nav-link">
-                                <i class="nav-icon fas fa-cogs"></i>
+                                <i class="nav-icon fas fa-cog"></i>
                                 <p>
                                     Management
                                     <i class="right fas fa-angle-left"></i>
@@ -109,6 +110,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                                 </li>
                             </ul>
                         </li>
+
+                        <li class="nav-item">
+                            <router-link tag="a" to="/developer" class="nav-link">
+                              <i class="nav-icon fas fa-cogs"></i>
+                                <p>Developer</p>
+                            </router-link>
+                        </li>
+                        @endcan
                         <li class="nav-item">
                             <router-link to="/profile" class="nav-link">
                                 <i class="nav-icon fas fa-user"></i>
@@ -149,6 +158,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
         </footer>
     </div>
     <!-- ./wrapper -->
+
+    @auth
+        <script>
+            window.user = @json(auth()->user());
+        </script>
+    @endauth
 
     <script src="/js/app.js"></script>
 </body>
